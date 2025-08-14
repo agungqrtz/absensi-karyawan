@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB; // Import DB Facade
 use Illuminate\Support\Facades\Validator;
+use App\Exports\RecapExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AttendanceController extends Controller
 {
@@ -184,5 +187,64 @@ class AttendanceController extends Controller
         $employee->delete();
 
         return response()->json(['message' => 'Karyawan dan semua data absensinya berhasil dihapus!']);
+    }
+
+    // ==================================================
+    // METODE UNTUK EXPORT
+    // ==================================================
+    
+    /**
+     * Menangani permintaan ekspor rekap ke Excel.
+     * API Endpoint: GET /api/export/recap
+     */
+    public function exportRecap(Request $request)
+    {
+        $month = $request->query('month', date('m'));
+        $year = $request->query('year', date('Y'));
+
+        $monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        $monthName = $monthNames[$month - 1];
+
+        $fileName = 'rekap_absensi_' . strtolower($monthName) . '_' . $year . '.xlsx';
+
+        return Excel::download(new RecapExport((int)$month, (int)$year), $fileName);
+    }
+
+    /**
+     * Mengambil data untuk statistik dan grafik.
+     * API Endpoint: GET /api/statistics
+     */
+    public function getStatisticsData(Request $request)
+    {
+        $month = $request->query('month', date('m'));
+        $year = $request->query('year', date('Y'));
+
+        // 1. Data untuk Pie Chart (Persentase Keseluruhan)
+        $overallStats = Attendance::whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        // 2. Data untuk Line Chart (Tren Kehadiran Harian)
+        $dailyAttendance = Attendance::whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->where('status', 'Hadir')
+            ->select(DB::raw('DAY(date) as day'), DB::raw('count(*) as total'))
+            ->groupBy('day')
+            ->orderBy('day', 'asc')
+            ->pluck('total', 'day');
+
+        // Siapkan data untuk semua hari dalam sebulan agar grafik lengkap
+        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        $dailyTrend = [];
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $dailyTrend[$day] = $dailyAttendance->get($day, 0);
+        }
+
+        return response()->json([
+            'overall' => $overallStats,
+            'daily_trend' => $dailyTrend,
+        ]);
     }
 }

@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Auth;
 
 Auth::routes();
 
+// Rute BARU untuk halaman "Pendaftaran Berhasil"
+Route::get('/register/success', function () {
+    return view('auth.registered');
+})->name('register.success');
+
 // Tambahkan route ini untuk redirect dari "/" ke "/beranda"
 Route::get('/', function () {
     return redirect('/beranda');
@@ -24,6 +29,13 @@ Route::get('/beranda', [AttendanceController::class, 'index'])->name('attendance
 Route::prefix('api')->middleware('auth')->group(function () {
     Route::post('/attendance', [AttendanceController::class, 'submitAttendance']);
     Route::get('/recap', [AttendanceController::class, 'getRecap']);
+    
+    // Rute untuk Ekspor Excel
+    Route::get('/export/recap', [AttendanceController::class, 'exportRecap'])->name('export.recap');
+
+    // Rute BARU untuk Statistik & Grafik
+    Route::get('/statistics', [AttendanceController::class, 'getStatisticsData'])->name('statistics.data');
+
     Route::post('/attendance-data', [AttendanceController::class, 'store']);
     Route::put('/attendance-data/{attendance}', [AttendanceController::class, 'update']);
     Route::delete('/attendance-data/{attendance}', [AttendanceController::class, 'destroy']);

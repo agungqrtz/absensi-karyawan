@@ -2,27 +2,17 @@
 @extends('layouts.app')
 
 @push('styles')
-    {{-- Menggunakan Tailwind CSS dari CDN --}}
+    {{-- Menggunakan Tailwind CSS & Chart.js dari CDN --}}
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Custom scrollbar for better aesthetics */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1f2937;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #4f46e5;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #6366f1;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
         /* Custom style for date picker icon */
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(0.8);
-        }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
     </style>
 @endpush
 
@@ -48,6 +38,7 @@
                 <button class="nav-tab active text-base py-3 px-4 sm:px-6 border-b-2 border-indigo-500 text-white font-semibold" onclick="showTab('attendance')">📝 Input Absensi</button>
                 <button class="nav-tab text-base py-3 px-4 sm:px-6 text-gray-400 hover:text-white transition" onclick="showTab('recap')">📊 Rekap Bulanan</button>
                 <button class="nav-tab text-base py-3 px-4 sm:px-6 text-gray-400 hover:text-white transition" onclick="showTab('employees')">👥 Kelola Karyawan</button>
+                <button class="nav-tab text-base py-3 px-4 sm:px-6 text-gray-400 hover:text-white transition" onclick="showTab('statistics')">📈 Statistik</button>
             </div>
         </div>
 
@@ -58,7 +49,6 @@
                     <div class="flex items-center gap-3 flex-wrap">
                         <label for="attendance-date" class="font-semibold">Pilih Tanggal:</label>
                         <input type="date" id="attendance-date" class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        {{-- Kolom Pencarian Karyawan --}}
                         <input type="text" id="search-employee" oninput="filterEmployeeCards()" placeholder="Cari karyawan..." class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
                     </div>
                     <div class="flex items-center gap-3">
@@ -66,12 +56,8 @@
                         <button onclick="clearAllSelections()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md transition">Kosongkan</button>
                     </div>
                 </div>
-
-                <div id="attendanceGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                    {{-- Kartu karyawan akan digenerate oleh JavaScript --}}
-                </div>
+                <div id="attendanceGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"></div>
                 <p id="no-employee-found" class="text-center text-gray-400 mt-8 hidden">Karyawan tidak ditemukan.</p>
-
                 <button class="submit-btn w-full mt-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 text-lg" onclick="submitAttendance()">
                     <span id="submit-text">🚀 Kirim Absensi</span>
                 </button>
@@ -85,17 +71,15 @@
                     <select id="recap-month" class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
                     <select id="recap-year" class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
                     <button onclick="generateRecap()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md transition">Tampilkan Rekap</button>
+                    <button onclick="exportRecapToExcel()" id="exportButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition hidden">
+                        Export ke Excel
+                    </button>
                 </div>
-
-                {{-- Container BARU untuk Statistik --}}
                 <div id="recapStatsContainer" class="mb-8"></div>
-
                 <div id="recapTableContainer" class="mt-6"></div>
-                
                 <div id="crudControls" class="hidden mt-8 pt-6 border-t border-gray-700">
                     <button onclick="showAddForm()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition">➕ Tambah Data Manual</button>
                 </div>
-
                 <div id="crudFormContainer" class="hidden mt-6 bg-gray-700/50 p-6 rounded-lg">
                     <h3 id="form-title" class="text-xl font-semibold mb-4">Tambah Data Absensi</h3>
                     <form id="crudForm" onsubmit="event.preventDefault(); saveData();" class="space-y-4">
@@ -122,7 +106,6 @@
                         </div>
                     </form>
                 </div>
-                
                 <div id="detailTableContainer" class="mt-8"></div>
             </div>
         </div>
@@ -130,27 +113,47 @@
         {{-- TAB CONTENT: KELOLA KARYAWAN --}}
         <div id="employeesTab" class="tab-content hidden">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {{-- Form Tambah Karyawan --}}
                 <div class="md:col-span-1">
                     <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                         <h3 class="text-xl font-semibold text-white mb-4">Tambah Karyawan Baru</h3>
                         <form id="addEmployeeForm" onsubmit="event.preventDefault(); addEmployee();" class="space-y-4">
                             <div>
                                 <label for="employee-name" class="block mb-2 text-sm font-medium text-gray-300">Nama Karyawan</label>
-                                <input type="text" id="employee-name" class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5" placeholder="Contoh: Budi Santoso" required>
+                                <input type="text" id="employee-name" class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5" placeholder="Contoh: Agung Setiawan" required>
                             </div>
                             <button type="submit" class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Tambah Karyawan</button>
                         </form>
                     </div>
                 </div>
-                {{-- Daftar Karyawan --}}
                 <div class="md:col-span-2">
                     <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                         <h3 class="text-xl font-semibold text-white mb-4">Daftar Karyawan</h3>
-                        <div id="employeeListContainer" class="overflow-x-auto">
-                            {{-- Tabel daftar karyawan akan digenerate oleh JavaScript --}}
-                        </div>
+                        <div id="employeeListContainer" class="overflow-x-auto"></div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- TAB CONTENT BARU: STATISTIK --}}
+        <div id="statisticsTab" class="tab-content hidden">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+                    <select id="stats-month" class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
+                    <select id="stats-year" class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
+                    <button onclick="generateStatistics()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md transition">Tampilkan Statistik</button>
+                </div>
+                <div id="stats-container" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 bg-gray-700/50 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-white mb-4 text-center">Persentase Kehadiran</h3>
+                        <canvas id="overallStatsChart"></canvas>
+                    </div>
+                    <div class="lg:col-span-2 bg-gray-700/50 p-6 rounded-lg">
+                         <h3 class="text-xl font-semibold text-white mb-4 text-center">Tren Kehadiran Harian</h3>
+                        <canvas id="dailyTrendChart"></canvas>
+                    </div>
+                </div>
+                 <div id="no-stats-data" class="text-center text-gray-400 mt-8 hidden">
+                    <p>Tidak ada data statistik untuk periode yang dipilih.</p>
                 </div>
             </div>
         </div>
@@ -177,6 +180,8 @@
 
     let employees = [];
     let currentEditingData = null;
+    let overallChartInstance = null;
+    let dailyChartInstance = null;
 
     function updateLiveTime() {
         const timeElement = document.getElementById('live-time');
@@ -193,25 +198,36 @@
         document.getElementById('attendance-date').value = new Date().toISOString().split('T')[0];
         const recapMonthSelect = document.getElementById('recap-month');
         const recapYearSelect = document.getElementById('recap-year');
+        const statsMonthSelect = document.getElementById('stats-month');
+        const statsYearSelect = document.getElementById('stats-year');
+        
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1;
         const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        
         for (let i = 0; i < 12; i++) {
             const option = document.createElement('option');
             option.value = i + 1;
             option.textContent = monthNames[i];
-            recapMonthSelect.appendChild(option);
+            recapMonthSelect.appendChild(option.cloneNode(true));
+            statsMonthSelect.appendChild(option.cloneNode(true));
         }
         for (let i = currentYear; i >= currentYear - 5; i--) {
             const option = document.createElement('option');
             option.value = i;
             option.textContent = i;
-            recapYearSelect.appendChild(option);
+            recapYearSelect.appendChild(option.cloneNode(true));
+            statsYearSelect.appendChild(option.cloneNode(true));
         }
+        
         recapMonthSelect.value = currentMonth;
         recapYearSelect.value = currentYear;
+        statsMonthSelect.value = currentMonth;
+        statsYearSelect.value = currentYear;
+        
         refreshAllEmployeeData();
+        generateStatistics();
         updateLiveTime();
         setInterval(updateLiveTime, 1000);
     });
@@ -263,7 +279,7 @@
             `;
             grid.appendChild(card);
         });
-        filterEmployeeCards(); // Terapkan filter setelah generate
+        filterEmployeeCards();
     }
 
     async function submitAttendance() {
@@ -319,8 +335,10 @@
             displayRecap(data.recap, month, year);
             displayDetailData(data.detail);
             document.getElementById('crudControls').style.display = 'flex';
+            document.getElementById('exportButton').classList.remove('hidden');
         } catch (error) {
             showMessage(`❌ Error: ${error.message}`, 'error');
+            document.getElementById('exportButton').classList.add('hidden');
         }
     }
 
@@ -336,7 +354,6 @@
         const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         const generationTime = `Dicetak pada: ${dateString}, Pukul ${timeString}`;
         
-        // Hitung total statistik
         let totalHadir = 0, totalIzin = 0, totalSakit = 0, totalAlpha = 0;
         for (const name in recapData) {
             totalHadir += recapData[name].Hadir || 0;
@@ -346,29 +363,13 @@
         }
         const totalRecords = totalHadir + totalIzin + totalSakit + totalAlpha;
 
-        // Tampilkan statistik
         statsContainer.innerHTML = `
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div class="bg-gray-700 p-4 rounded-lg text-center">
-                    <p class="text-sm text-gray-400">Total Absen</p>
-                    <p class="text-2xl font-bold text-white">${totalRecords}</p>
-                </div>
-                <div class="bg-green-800/50 border border-green-600 p-4 rounded-lg text-center">
-                    <p class="text-sm text-green-300">Total Hadir</p>
-                    <p class="text-2xl font-bold text-white">${totalHadir}</p>
-                </div>
-                <div class="bg-yellow-800/50 border border-yellow-600 p-4 rounded-lg text-center">
-                    <p class="text-sm text-yellow-300">Total Izin</p>
-                    <p class="text-2xl font-bold text-white">${totalIzin}</p>
-                </div>
-                <div class="bg-purple-800/50 border border-purple-600 p-4 rounded-lg text-center">
-                    <p class="text-sm text-purple-300">Total Sakit</p>
-                    <p class="text-2xl font-bold text-white">${totalSakit}</p>
-                </div>
-                <div class="bg-red-800/50 border border-red-600 p-4 rounded-lg text-center">
-                    <p class="text-sm text-red-300">Total Alpha</p>
-                    <p class="text-2xl font-bold text-white">${totalAlpha}</p>
-                </div>
+                <div class="bg-gray-700 p-4 rounded-lg text-center"><p class="text-sm text-gray-400">Total Absen</p><p class="text-2xl font-bold text-white">${totalRecords}</p></div>
+                <div class="bg-green-800/50 border border-green-600 p-4 rounded-lg text-center"><p class="text-sm text-green-300">Total Hadir</p><p class="text-2xl font-bold text-white">${totalHadir}</p></div>
+                <div class="bg-yellow-800/50 border border-yellow-600 p-4 rounded-lg text-center"><p class="text-sm text-yellow-300">Total Izin</p><p class="text-2xl font-bold text-white">${totalIzin}</p></div>
+                <div class="bg-purple-800/50 border border-purple-600 p-4 rounded-lg text-center"><p class="text-sm text-purple-300">Total Sakit</p><p class="text-2xl font-bold text-white">${totalSakit}</p></div>
+                <div class="bg-red-800/50 border border-red-600 p-4 rounded-lg text-center"><p class="text-sm text-red-300">Total Alpha</p><p class="text-2xl font-bold text-white">${totalAlpha}</p></div>
             </div>
         `;
 
@@ -592,8 +593,6 @@
         dialog.classList.add('flex');
     }
 
-    // --- FUNGSI BARU UNTUK KELOLA KARYAWAN ---
-
     function displayEmployeeListTable(employeeList) {
         const container = document.getElementById('employeeListContainer');
         if (employeeList.length === 0) {
@@ -631,7 +630,6 @@
         if (!name) {
             return showMessage('Nama karyawan tidak boleh kosong!', 'error');
         }
-
         try {
             const response = await fetch(`${API_URL}/employees`, {
                 method: 'POST',
@@ -673,12 +671,10 @@
         }
     }
 
-    // --- FUNGSI BARU UNTUK FILTER KARYAWAN ---
     function filterEmployeeCards() {
         const searchTerm = document.getElementById('search-employee').value.toLowerCase();
         const cards = document.querySelectorAll('.employee-card-item');
         let visibleCount = 0;
-
         cards.forEach(card => {
             const name = card.querySelector('.employee-name-text').textContent.toLowerCase();
             if (name.includes(searchTerm)) {
@@ -688,7 +684,6 @@
                 card.style.display = 'none';
             }
         });
-
         const noResultEl = document.getElementById('no-employee-found');
         if (visibleCount === 0) {
             noResultEl.classList.remove('hidden');
@@ -697,5 +692,113 @@
         }
     }
 
+    function exportRecapToExcel() {
+        const month = document.getElementById('recap-month').value;
+        const year = document.getElementById('recap-year').value;
+        const url = `{{ route('export.recap') }}?month=${month}&year=${year}`;
+        window.open(url, '_blank');
+    }
+
+    // --- FUNGSI BARU UNTUK STATISTIK ---
+    async function generateStatistics() {
+        const month = document.getElementById('stats-month').value;
+        const year = document.getElementById('stats-year').value;
+        try {
+            const response = await fetch(`${API_URL}/statistics?month=${month}&year=${year}`);
+            if (!response.ok) throw new Error('Gagal mengambil data statistik.');
+            const data = await response.json();
+            if (Object.keys(data.overall).length === 0) {
+                document.getElementById('stats-container').classList.add('hidden');
+                document.getElementById('no-stats-data').classList.remove('hidden');
+                if (overallChartInstance) overallChartInstance.destroy();
+                if (dailyChartInstance) dailyChartInstance.destroy();
+                return;
+            }
+            document.getElementById('stats-container').classList.remove('hidden');
+            document.getElementById('no-stats-data').classList.add('hidden');
+            renderOverallStatsChart(data.overall);
+            renderDailyTrendChart(data.daily_trend);
+        } catch (error) {
+            showMessage(`❌ Error: ${error.message}`, 'error');
+        }
+    }
+
+    function renderOverallStatsChart(data) {
+        const ctx = document.getElementById('overallStatsChart').getContext('2d');
+        if (overallChartInstance) {
+            overallChartInstance.destroy();
+        }
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+        const chartData = {
+            labels: labels,
+            datasets: [{
+                label: 'Total',
+                data: values,
+                backgroundColor: [
+                    'rgba(34, 197, 94, 0.7)',  // Hadir (green-500)
+                    'rgba(234, 179, 8, 0.7)', // Izin (yellow-500)
+                    'rgba(139, 92, 246, 0.7)',// Sakit (violet-500)
+                    'rgba(239, 68, 68, 0.7)'   // Alpha (red-500)
+                ],
+                borderColor: '#1f2937',
+                borderWidth: 3
+            }]
+        };
+        overallChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: chartData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#d1d5db' }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderDailyTrendChart(data) {
+        const ctx = document.getElementById('dailyTrendChart').getContext('2d');
+        if (dailyChartInstance) {
+            dailyChartInstance.destroy();
+        }
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+        const chartData = {
+            labels: labels,
+            datasets: [{
+                label: 'Jumlah Karyawan Hadir',
+                data: values,
+                fill: true,
+                borderColor: 'rgb(99, 102, 241)',
+                backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                tension: 0.3
+            }]
+        };
+        dailyChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#9ca3af', stepSize: 1 },
+                        grid: { color: '#374151' }
+                    },
+                    x: {
+                        ticks: { color: '#9ca3af' },
+                         grid: { color: '#374151' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
 </script>
 @endpush
