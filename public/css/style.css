@@ -1,0 +1,326 @@
+/* public/css/style.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #4a90e2;
+    --success-color: #4CAF50;
+    --error-color: #F44336;
+    --bg-color: #f4f7f6;
+    --card-bg: #ffffff;
+    --text-color: #333;
+    --border-color: #e0e0e0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+}
+
+.header h1 {
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.nav-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.nav-tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #777;
+    position: relative;
+    transition: color 0.3s;
+}
+
+.nav-tab.active {
+    color: var(--primary-color);
+}
+
+.nav-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.date-picker, .action-buttons, .recap-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+input[type="date"], select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-family: 'Poppins', sans-serif;
+}
+
+button, .submit-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+button:hover, .submit-btn:hover {
+    opacity: 0.85;
+}
+
+.action-buttons button, .recap-controls button {
+    background-color: #6c757d;
+    color: white;
+}
+
+.submit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.1rem;
+}
+
+.submit-btn:disabled {
+    background-color: #a9a9a9;
+    cursor: not-allowed;
+}
+
+.employee-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.employee-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.employee-name {
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.5rem;
+}
+
+.status-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.status-option input[type="radio"] {
+    display: none;
+}
+
+.status-option label {
+    display: block;
+    padding: 8px;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.status-option input[type="radio"]:checked + label {
+    color: white;
+    border-color: transparent;
+}
+
+.status-hadir input:checked + label { background-color: var(--success-color); }
+.status-izin input:checked + label { background-color: #FFC107; color: black !important;}
+.status-sakit input:checked + label { background-color: #673AB7; }
+.status-alpha input:checked + label { background-color: var(--error-color); }
+
+
+.table-container {
+    margin-top: 1.5rem;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+thead tr {
+    background-color: #f8f9fa;
+}
+
+th {
+    font-weight: 600;
+}
+
+.action-cell {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-cell button {
+    padding: 5px 8px;
+    font-size: 0.9rem;
+}
+.edit-btn { background-color: #ffc107; color: #333;}
+.delete-btn { background-color: #dc3545; color: white;}
+
+/* Form CRUD */
+#crudControls {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+#crudControls button {
+    background-color: var(--success-color);
+    color: white;
+}
+.form-container {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: #fdfdfd;
+}
+.form-container h3 { margin-top: 0; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+.form-group input, .form-group select { width: 100%; box-sizing: border-box; }
+.form-buttons { display: flex; gap: 1rem; }
+.form-buttons button[type="submit"] { background-color: var(--primary-color); color: white; }
+.form-buttons button[type="button"] { background-color: #6c757d; color: white; }
+
+/* Status Badge */
+.status-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+.status-hadir { background-color: var(--success-color); }
+.status-izin { background-color: #FFC107; color: black;}
+.status-sakit { background-color: #673AB7; }
+.status-alpha { background-color: var(--error-color); }
+
+/* Notifikasi */
+.message-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 8px;
+    color: white;
+    z-index: 1000;
+    transform: translateY(-200%);
+    transition: transform 0.5s ease-in-out;
+}
+.message-container.show {
+    transform: translateY(0);
+}
+.message-container.success { background-color: var(--success-color); }
+.message-container.error { background-color: var(--error-color); }
+
+/* Dialog Konfirmasi */
+.dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+.dialog-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.dialog-buttons {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+#confirm-yes { background-color: var(--error-color); color: white;}
+#confirm-no { background-color: #6c757d; color: white;}
+
+/* Loading Spinner */
+.loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
