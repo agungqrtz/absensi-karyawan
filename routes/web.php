@@ -12,33 +12,43 @@ use Illuminate\Support\Facades\Auth;
 
 Auth::routes();
 
-// Rute BARU untuk halaman "Pendaftaran Berhasil"
+// Rute untuk halaman "Pendaftaran Berhasil"
 Route::get('/register/success', function () {
     return view('auth.registered');
 })->name('register.success');
 
-// Tambahkan route ini untuk redirect dari "/" ke "/beranda"
+// Redirect dari "/" ke "/beranda"
 Route::get('/', function () {
     return redirect('/beranda');
 });
 
-// Ubah URL halaman utama menjadi /beranda
-Route::get('/beranda', [AttendanceController::class, 'index'])->name('attendance.index')->middleware('auth');
+// Halaman utama aplikasi yang memerlukan login
+Route::get('/beranda', [AttendanceController::class, 'index'])
+    ->name('attendance.index')
+    ->middleware('auth');
 
-// Grup rute API tetap sama, tapi sekarang dilindungi oleh middleware 'auth'
+// ===================================================================
+// GRUP RUTE API (DIKEMBALIKAN KE SINI DENGAN MIDDLEWARE 'auth')
+// ===================================================================
 Route::prefix('api')->middleware('auth')->group(function () {
+    Route::get('/attendance-status', [AttendanceController::class, 'getAttendanceStatus']);
     Route::post('/attendance', [AttendanceController::class, 'submitAttendance']);
     Route::get('/recap', [AttendanceController::class, 'getRecap']);
     
-    // Rute untuk Ekspor Excel
+    // Rute ini sekarang akan ditemukan oleh helper route() di Blade
     Route::get('/export/recap', [AttendanceController::class, 'exportRecap'])->name('export.recap');
 
-    // Rute BARU untuk Statistik & Grafik
-    Route::get('/statistics', [AttendanceController::class, 'getStatisticsData'])->name('statistics.data');
-
+    Route::get('/statistics', [AttendanceController::class, 'getStatisticsData']);
+    
+    // Rute CRUD Absensi
     Route::post('/attendance-data', [AttendanceController::class, 'store']);
     Route::put('/attendance-data/{attendance}', [AttendanceController::class, 'update']);
     Route::delete('/attendance-data/{attendance}', [AttendanceController::class, 'destroy']);
+    
+    // RUTE BARU UNTUK HAPUS DATA PER BULAN
+    Route::delete('/recap/delete-month', [AttendanceController::class, 'destroyCurrentMonth'])->name('recap.delete_month');
+    
+    // Rute CRUD Karyawan
     Route::get('/employees', [AttendanceController::class, 'getEmployees']);
     Route::post('/employees', [AttendanceController::class, 'storeEmployee']);
     Route::delete('/employees/{employee}', [AttendanceController::class, 'destroyEmployee']);

@@ -144,6 +144,35 @@ class AttendanceController extends Controller
         return response()->json(['message' => '🗑️ Data absensi berhasil dihapus!'], 200);
     }
 
+    /**
+     * BARU: Menghapus semua data absensi untuk bulan dan tahun yang dipilih.
+     * API Endpoint: DELETE /api/recap/delete-month
+     */
+    public function destroyCurrentMonth(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'month' => 'required|integer|between:1,12',
+            'year' => 'required|integer|date_format:Y',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Bulan dan tahun tidak valid.'], 422);
+        }
+
+        $month = $request->input('month');
+        $year = $request->input('year');
+
+        $deletedCount = Attendance::whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->delete();
+
+        if ($deletedCount > 0) {
+            return response()->json(['message' => "🗑️ Berhasil menghapus {$deletedCount} data absensi untuk periode ini!"]);
+        }
+
+        return response()->json(['message' => 'Tidak ada data absensi yang ditemukan untuk dihapus pada periode ini.'], 404);
+    }
+
     // ==================================================
     // METODE UNTUK KELOLA KARYAWAN
     // ==================================================
@@ -246,5 +275,25 @@ class AttendanceController extends Controller
             'overall' => $overallStats,
             'daily_trend' => $dailyTrend,
         ]);
+    }
+
+    /**
+     * Mengambil status absensi untuk tanggal tertentu.
+     * API Endpoint: GET /api/attendance-status
+     */
+    public function getAttendanceStatus(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Format tanggal tidak valid.'], 422);
+        }
+
+        $statuses = Attendance::where('date', $request->query('date'))
+            ->pluck('status', 'employee_id');
+
+        return response()->json($statuses);
     }
 }

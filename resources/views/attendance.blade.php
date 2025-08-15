@@ -5,6 +5,8 @@
     {{-- Menggunakan Tailwind CSS & Chart.js dari CDN --}}
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {{-- Menambahkan Axios dari CDN --}}
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         /* Custom scrollbar for better aesthetics */
         ::-webkit-scrollbar { width: 8px; }
@@ -13,6 +15,9 @@
         ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
         /* Custom style for date picker icon */
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
+        /* Utility to hide scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 @endpush
 
@@ -22,7 +27,7 @@
 
         {{-- HEADER --}}
         <div class="text-center mb-8">
-            <h1 class="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">
                 Sistem Absensi Karyawan
             </h1>
             <p class="text-gray-400 mt-2">Kelola absensi dengan mudah dan efisien</p>
@@ -34,29 +39,31 @@
 
         {{-- NAV TABS --}}
         <div class="mb-6">
-            <div class="flex border-b border-gray-700">
-                <button class="nav-tab active text-base py-3 px-4 sm:px-6 border-b-2 border-indigo-500 text-white font-semibold" onclick="showTab('attendance')">📝 Input Absensi</button>
-                <button class="nav-tab text-base py-3 px-4 sm:px-6 text-gray-400 hover:text-white transition" onclick="showTab('recap')">📊 Rekap Bulanan</button>
-                <button class="nav-tab text-base py-3 px-4 sm:px-6 text-gray-400 hover:text-white transition" onclick="showTab('employees')">👥 Kelola Karyawan</button>
-                <button class="nav-tab text-base py-3 px-4 sm:px-6 text-gray-400 hover:text-white transition" onclick="showTab('statistics')">📈 Statistik</button>
+            <div class="flex border-b border-gray-700 overflow-x-auto no-scrollbar">
+                <button class="nav-tab active text-base py-3 px-4 sm:px-6 border-b-2 border-indigo-500 text-white font-semibold flex-shrink-0" onclick="showTab('attendance')">📝 Input Absensi</button>
+                <button class="nav-tab text-base py-3 px-4 sm:px-6 text-gray-400 hover:text-white transition flex-shrink-0" onclick="showTab('recap')">📊 Rekap Bulanan</button>
+                <button class="nav-tab text-base py-3 px-4 sm:px-6 text-gray-400 hover:text-white transition flex-shrink-0" onclick="showTab('employees')">👥 Kelola Karyawan</button>
+                <button class="nav-tab text-base py-3 px-4 sm:px-6 text-gray-400 hover:text-white transition flex-shrink-0" onclick="showTab('statistics')">📈 Statistik</button>
             </div>
         </div>
 
         {{-- TAB CONTENT: INPUT ABSENSI --}}
         <div id="attendanceTab" class="tab-content">
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <div class="flex items-center gap-3 flex-wrap">
-                        <label for="attendance-date" class="font-semibold">Pilih Tanggal:</label>
-                        <input type="date" id="attendance-date" class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <input type="text" id="search-employee" oninput="filterEmployeeCards()" placeholder="Cari karyawan..." class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap w-full sm:w-auto">
+                        <div class="flex items-center gap-3">
+                           <label for="attendance-date" class="font-semibold flex-shrink-0">Tanggal:</label>
+                           <input type="date" id="attendance-date" class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none w-full">
+                        </div>
+                        <input type="text" id="search-employee" oninput="filterEmployeeCards()" placeholder="Cari karyawan..." class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none w-full sm:w-auto" />
                     </div>
-                    <div class="flex items-center gap-3">
-                        <button onclick="markAllPresent()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition">Hadir Semua</button>
-                        <button onclick="clearAllSelections()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md transition">Kosongkan</button>
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <button onclick="markAllPresent()" class="w-1/2 sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition">Hadir Semua</button>
+                        <button onclick="clearAllSelections()" class="w-1/2 sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md transition">Kosongkan</button>
                     </div>
                 </div>
-                <div id="attendanceGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"></div>
+                <div id="attendanceGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
                 <p id="no-employee-found" class="text-center text-gray-400 mt-8 hidden">Karyawan tidak ditemukan.</p>
                 <button class="submit-btn w-full mt-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 text-lg" onclick="submitAttendance()">
                     <span id="submit-text">🚀 Kirim Absensi</span>
@@ -66,13 +73,16 @@
 
         {{-- TAB CONTENT: REKAP BULANAN --}}
         <div id="recapTab" class="tab-content hidden">
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-                    <select id="recap-month" class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
-                    <select id="recap-year" class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
-                    <button onclick="generateRecap()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md transition">Tampilkan Rekap</button>
-                    <button onclick="exportRecapToExcel()" id="exportButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition hidden">
+            <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6 flex-wrap">
+                    <select id="recap-month" class="w-full sm:w-auto bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
+                    <select id="recap-year" class="w-full sm:w-auto bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
+                    <button onclick="generateRecap()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md transition">Tampilkan Rekap</button>
+                    <button onclick="exportRecapToExcel()" id="exportButton" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition hidden">
                         Export ke Excel
+                    </button>
+                    <button onclick="deleteCurrentMonthData()" id="deleteMonthButton" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md transition hidden sm:ml-auto">
+                        Hapus Data Bulan Ini
                     </button>
                 </div>
                 <div id="recapStatsContainer" class="mb-8"></div>
@@ -114,7 +124,7 @@
         <div id="employeesTab" class="tab-content hidden">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="md:col-span-1">
-                    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg">
                         <h3 class="text-xl font-semibold text-white mb-4">Tambah Karyawan Baru</h3>
                         <form id="addEmployeeForm" onsubmit="event.preventDefault(); addEmployee();" class="space-y-4">
                             <div>
@@ -126,7 +136,7 @@
                     </div>
                 </div>
                 <div class="md:col-span-2">
-                    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg">
                         <h3 class="text-xl font-semibold text-white mb-4">Daftar Karyawan</h3>
                         <div id="employeeListContainer" class="overflow-x-auto"></div>
                     </div>
@@ -136,11 +146,11 @@
 
         {{-- TAB CONTENT: STATISTIK --}}
         <div id="statisticsTab" class="tab-content hidden">
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-                    <select id="stats-month" class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
-                    <select id="stats-year" class="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
-                    <button onclick="generateStatistics()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md transition">Tampilkan Statistik</button>
+            <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6 flex-wrap">
+                    <select id="stats-month" class="w-full sm:w-auto bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
+                    <select id="stats-year" class="w-full sm:w-auto bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
+                    <button onclick="generateStatistics()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md transition">Tampilkan Statistik</button>
                 </div>
                 <div id="stats-container" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-1 bg-gray-700/50 p-6 rounded-lg">
@@ -176,7 +186,13 @@
 @push('scripts')
 <script>
     const API_URL = '{{ url("/api") }}';
-    const CSRF_TOKEN = '{{ csrf_token() }}';
+
+    // *** PERBAIKAN UTAMA: KONFIGURASI AXIOS ***
+    // Mengatur axios untuk mengirim cookie pada setiap permintaan.
+    if (window.axios) {
+        window.axios.defaults.withCredentials = true;
+        window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+    }
 
     let employees = [];
     let currentEditingData = null;
@@ -197,13 +213,11 @@
     document.addEventListener('DOMContentLoaded', function() {
         const attendanceDateInput = document.getElementById('attendance-date');
         
-        // --- PERBAIKAN ZONA WAKTU ---
         const today = new Date();
         const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
         const dd = String(today.getDate()).padStart(2, '0');
         attendanceDateInput.value = `${yyyy}-${mm}-${dd}`;
-        // --- AKHIR PERBAIKAN ---
 
         attendanceDateInput.addEventListener('change', fetchAttendanceStatus);
 
@@ -245,16 +259,15 @@
 
     async function refreshAllEmployeeData() {
         try {
-            const response = await fetch(`${API_URL}/employees`);
-            if (!response.ok) throw new Error('Gagal memuat daftar karyawan.');
-            employees = await response.json();
+            const response = await axios.get(`${API_URL}/employees`);
+            employees = response.data;
             generateEmployeeCards(employees);
             populateEmployeeDropdown(employees);
             displayEmployeeListTable(employees);
-            await fetchAttendanceStatus(); // Panggil status untuk tanggal hari ini
+            // await fetchAttendanceStatus(); // DIKOMENTARI: Mencegah auto-load status saat halaman pertama kali dibuka
         } catch (error) {
             console.error('Failed to load employees:', error);
-            showMessage('Gagal memuat daftar karyawan.', 'error');
+            showMessage('Gagal memuat daftar karyawan. Sesi Anda mungkin telah berakhir, silakan login kembali.', 'error');
         }
     }
 
@@ -319,17 +332,12 @@
             return;
         }
         try {
-            const response = await fetch(`${API_URL}/attendance`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
-                body: JSON.stringify({ data: attendanceData })
-            });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'Gagal mengirim data.');
-            showMessage(`✅ ${result.message}`, 'success');
+            const response = await axios.post(`${API_URL}/attendance`, { data: attendanceData });
+            showMessage(`✅ ${response.data.message}`, 'success');
             clearAllSelections();
         } catch (error) {
-            showMessage(`❌ Gagal: ${error.message}`, 'error');
+            const message = error.response?.data?.message || 'Gagal mengirim data.';
+            showMessage(`❌ Gagal: ${message}`, 'error');
             console.error('Error:', error);
         } finally {
             submitText.innerHTML = '🚀 Kirim Absensi';
@@ -340,17 +348,20 @@
     async function generateRecap() {
         const month = document.getElementById('recap-month').value;
         const year = document.getElementById('recap-year').value;
+        const deleteMonthBtn = document.getElementById('deleteMonthButton');
+
         try {
-            const response = await fetch(`${API_URL}/recap?month=${month}&year=${year}`);
-            if (!response.ok) throw new Error('Gagal mengambil data rekap.');
-            const data = await response.json();
+            const response = await axios.get(`${API_URL}/recap?month=${month}&year=${year}`);
+            const data = response.data;
             displayRecap(data.recap, month, year);
             displayDetailData(data.detail);
             document.getElementById('crudControls').style.display = 'flex';
             document.getElementById('exportButton').classList.remove('hidden');
+            deleteMonthBtn.classList.remove('hidden');
         } catch (error) {
-            showMessage(`❌ Error: ${error.message}`, 'error');
+            showMessage(`❌ Error: ${error.response?.data?.message || 'Gagal mengambil data rekap.'}`, 'error');
             document.getElementById('exportButton').classList.add('hidden');
+            deleteMonthBtn.classList.add('hidden');
         }
     }
 
@@ -513,25 +524,19 @@
             employee_id: document.getElementById('form-employee').value,
             status: document.getElementById('form-status').value,
         };
-        let url = `${API_URL}/attendance-data`;
-        let method = 'POST';
-        if (currentEditingData) {
-            url = `${API_URL}/attendance-data/${currentEditingData.id}`;
-            method = 'PUT';
-        }
+        
         try {
-            const response = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
-                body: JSON.stringify(record)
-            });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'Terjadi kesalahan.');
-            showMessage(result.message, 'success');
+            let response;
+            if (currentEditingData) {
+                response = await axios.put(`${API_URL}/attendance-data/${currentEditingData.id}`, record);
+            } else {
+                response = await axios.post(`${API_URL}/attendance-data`, record);
+            }
+            showMessage(response.data.message, 'success');
             cancelForm();
             refreshData();
         } catch(error) {
-            showMessage(`❌ Gagal menyimpan data: ${error.message}`, 'error');
+            showMessage(`❌ Gagal menyimpan data: ${error.response?.data?.message || 'Terjadi kesalahan.'}`, 'error');
         }
     }
 
@@ -541,22 +546,43 @@
     
     async function confirmDelete(recordId) {
         try {
-            const response = await fetch(`${API_URL}/attendance-data/${recordId}`, {
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' }
-            });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'Gagal menghapus data.');
-            showMessage(result.message, 'success');
+            const response = await axios.delete(`${API_URL}/attendance-data/${recordId}`);
+            showMessage(response.data.message, 'success');
             refreshData();
         } catch (error) {
-            showMessage(`❌ Gagal menghapus: ${error.message}`, 'error');
+            showMessage(`❌ Gagal menghapus: ${error.response?.data?.message || 'Gagal menghapus data.'}`, 'error');
         }
     }
     
     function refreshData() {
         if (!document.getElementById('recapTab').classList.contains('hidden')) {
             generateRecap();
+        }
+    }
+
+    // FUNGSI BARU UNTUK MEMULAI PROSES HAPUS PER BULAN
+    function deleteCurrentMonthData() {
+        const month = document.getElementById('recap-month').value;
+        const year = document.getElementById('recap-year').value;
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const monthName = monthNames[parseInt(month) - 1];
+
+        const message = `Apakah Anda yakin ingin menghapus SEMUA data absensi untuk bulan ${monthName} ${year}? Aksi ini tidak dapat dibatalkan.`;
+        
+        showConfirmDialog(message, () => confirmDeleteMonth(month, year));
+    }
+
+    // FUNGSI BARU UNTUK MENGIRIM PERMINTAAN HAPUS PER BULAN
+    async function confirmDeleteMonth(month, year) {
+        try {
+            const response = await axios.delete(`${API_URL}/recap/delete-month`, {
+                data: { month, year } // Untuk axios, body request DELETE ada di properti 'data'
+            });
+            
+            showMessage(response.data.message, 'success');
+            generateRecap(); // Muat ulang data rekap setelah berhasil dihapus
+        } catch (error) {
+            showMessage(`❌ Gagal menghapus: ${error.response?.data?.message || 'Gagal menghapus data.'}`, 'error');
         }
     }
 
@@ -643,21 +669,14 @@
             return showMessage('Nama karyawan tidak boleh kosong!', 'error');
         }
         try {
-            const response = await fetch(`${API_URL}/employees`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
-                body: JSON.stringify({ name: name })
-            });
-            const result = await response.json();
-            if (!response.ok) {
-                const errorMessage = result.errors && result.errors.name ? result.errors.name[0] : (result.message || 'Gagal menambahkan karyawan.');
-                throw new Error(errorMessage);
-            }
-            showMessage(`✅ Karyawan "${name}" berhasil ditambahkan!`, 'success');
+            const response = await axios.post(`${API_URL}/employees`, { name: name });
+            const result = response.data;
+            showMessage(`✅ ${result.message}`, 'success');
             nameInput.value = '';
             refreshAllEmployeeData();
         } catch (error) {
-            showMessage(`❌ Gagal: ${error.message}`, 'error');
+            const errorMessage = error.response?.data?.errors?.name?.[0] || error.response?.data?.message || 'Gagal menambahkan karyawan.';
+            showMessage(`❌ Gagal: ${errorMessage}`, 'error');
         }
     }
 
@@ -669,17 +688,11 @@
 
     async function confirmDeleteEmployee(employeeId) {
         try {
-            const response = await fetch(`${API_URL}/employees/${employeeId}`, {
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' }
-            });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'Gagal menghapus karyawan.');
-            
-            showMessage(result.message, 'success');
+            const response = await axios.delete(`${API_URL}/employees/${employeeId}`);
+            showMessage(response.data.message, 'success');
             refreshAllEmployeeData();
         } catch (error) {
-            showMessage(`❌ Gagal menghapus: ${error.message}`, 'error');
+            showMessage(`❌ Gagal menghapus: ${error.response?.data?.message || 'Gagal menghapus karyawan.'}`, 'error');
         }
     }
 
@@ -707,7 +720,7 @@
     function exportRecapToExcel() {
         const month = document.getElementById('recap-month').value;
         const year = document.getElementById('recap-year').value;
-        const url = `{{ route('export.recap') }}?month=${month}&year=${year}`;
+        const url = `{{ url('/api/export/recap') }}?month=${month}&year=${year}`;
         window.open(url, '_blank');
     }
 
@@ -715,9 +728,8 @@
         const month = document.getElementById('stats-month').value;
         const year = document.getElementById('stats-year').value;
         try {
-            const response = await fetch(`${API_URL}/statistics?month=${month}&year=${year}`);
-            if (!response.ok) throw new Error('Gagal mengambil data statistik.');
-            const data = await response.json();
+            const response = await axios.get(`${API_URL}/statistics?month=${month}&year=${year}`);
+            const data = response.data;
             if (Object.keys(data.overall).length === 0) {
                 document.getElementById('stats-container').classList.add('hidden');
                 document.getElementById('no-stats-data').classList.remove('hidden');
@@ -730,7 +742,7 @@
             renderOverallStatsChart(data.overall);
             renderDailyTrendChart(data.daily_trend);
         } catch (error) {
-            showMessage(`❌ Error: ${error.message}`, 'error');
+            showMessage(`❌ Error: ${error.response?.data?.message || 'Gagal mengambil data statistik.'}`, 'error');
         }
     }
 
@@ -819,32 +831,22 @@
         clearAllSelections();
 
         try {
-            const response = await fetch(`${API_URL}/attendance-status?date=${date}`);
+            const response = await axios.get(`${API_URL}/attendance-status?date=${date}`);
+            const statuses = response.data;
             
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                console.error("Menerima respons non-JSON. Kemungkinan sesi Anda telah berakhir.");
-                return; 
+            if (Object.keys(statuses).length === 0) {
+                return;
             }
-
-            if (response.ok) {
-                const statuses = await response.json();
-                if (Object.keys(statuses).length === 0) {
-                    return;
+            for (const employeeId in statuses) {
+                const status = statuses[employeeId];
+                const radio = document.getElementById(`emp-${employeeId}-${status}`);
+                if (radio) {
+                    radio.checked = true;
                 }
-                for (const employeeId in statuses) {
-                    const status = statuses[employeeId];
-                    const radio = document.getElementById(`emp-${employeeId}-${status}`);
-                    if (radio) {
-                        radio.checked = true;
-                    }
-                }
-            } else {
-                 throw new Error('Gagal mengambil data absensi.');
             }
         } catch (error) {
             console.error('Error fetching attendance status:', error);
-            showMessage(error.message, 'error');
+            // Tidak menampilkan pesan error di sini agar tidak mengganggu jika hanya data status yang gagal
         }
     }
 </script>
