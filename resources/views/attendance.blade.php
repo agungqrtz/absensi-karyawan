@@ -134,7 +134,7 @@
             </div>
         </div>
 
-        {{-- TAB CONTENT BARU: STATISTIK --}}
+        {{-- TAB CONTENT: STATISTIK --}}
         <div id="statisticsTab" class="tab-content hidden">
             <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
@@ -195,7 +195,18 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('attendance-date').value = new Date().toISOString().split('T')[0];
+        const attendanceDateInput = document.getElementById('attendance-date');
+        
+        // --- PERBAIKAN ZONA WAKTU ---
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const dd = String(today.getDate()).padStart(2, '0');
+        attendanceDateInput.value = `${yyyy}-${mm}-${dd}`;
+        // --- AKHIR PERBAIKAN ---
+
+        attendanceDateInput.addEventListener('change', fetchAttendanceStatus);
+
         const recapMonthSelect = document.getElementById('recap-month');
         const recapYearSelect = document.getElementById('recap-year');
         const statsMonthSelect = document.getElementById('stats-month');
@@ -240,6 +251,7 @@
             generateEmployeeCards(employees);
             populateEmployeeDropdown(employees);
             displayEmployeeListTable(employees);
+            await fetchAttendanceStatus(); // Panggil status untuk tanggal hari ini
         } catch (error) {
             console.error('Failed to load employees:', error);
             showMessage('Gagal memuat daftar karyawan.', 'error');
@@ -699,7 +711,6 @@
         window.open(url, '_blank');
     }
 
-    // --- FUNGSI BARU UNTUK STATISTIK ---
     async function generateStatistics() {
         const month = document.getElementById('stats-month').value;
         const year = document.getElementById('stats-year').value;
@@ -736,10 +747,10 @@
                 label: 'Total',
                 data: values,
                 backgroundColor: [
-                    'rgba(34, 197, 94, 0.7)',  // Hadir (green-500)
-                    'rgba(234, 179, 8, 0.7)', // Izin (yellow-500)
-                    'rgba(139, 92, 246, 0.7)',// Sakit (violet-500)
-                    'rgba(239, 68, 68, 0.7)'   // Alpha (red-500)
+                    'rgba(34, 197, 94, 0.7)',
+                    'rgba(234, 179, 8, 0.7)',
+                    'rgba(139, 92, 246, 0.7)',
+                    'rgba(239, 68, 68, 0.7)'
                 ],
                 borderColor: '#1f2937',
                 borderWidth: 3
@@ -799,6 +810,42 @@
                 }
             }
         });
+    }
+
+    async function fetchAttendanceStatus() {
+        const date = document.getElementById('attendance-date').value;
+        if (!date) return;
+
+        clearAllSelections();
+
+        try {
+            const response = await fetch(`${API_URL}/attendance-status?date=${date}`);
+            
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                console.error("Menerima respons non-JSON. Kemungkinan sesi Anda telah berakhir.");
+                return; 
+            }
+
+            if (response.ok) {
+                const statuses = await response.json();
+                if (Object.keys(statuses).length === 0) {
+                    return;
+                }
+                for (const employeeId in statuses) {
+                    const status = statuses[employeeId];
+                    const radio = document.getElementById(`emp-${employeeId}-${status}`);
+                    if (radio) {
+                        radio.checked = true;
+                    }
+                }
+            } else {
+                 throw new Error('Gagal mengambil data absensi.');
+            }
+        } catch (error) {
+            console.error('Error fetching attendance status:', error);
+            showMessage(error.message, 'error');
+        }
     }
 </script>
 @endpush
