@@ -15,8 +15,12 @@ class Employee extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-    ];
+    'name',
+    'age',
+    'gender',
+    'position',
+    'join_date',
+];
 
     /**
      * Get the attendance records for the employee.

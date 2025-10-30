@@ -190,20 +190,24 @@ class AttendanceController extends Controller
      * Menyimpan karyawan baru.
      * API Endpoint: POST /api/employees
      */
-    public function storeEmployee(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:employees,name',
-        ]);
+   public function storeEmployee(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255|unique:employees,name',
+        'age' => 'required|integer|min:17',
+        'gender' => 'required|in:Laki-laki,Perempuan',
+        'position' => 'required|string|max:100',
+        'join_date' => 'required|date',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        Employee::create($request->only('name'));
-
-        return response()->json(['message' => 'Karyawan berhasil ditambahkan!'], 201);
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
     }
+
+    Employee::create($request->all());
+
+    return response()->json(['message' => 'Karyawan berhasil ditambahkan!'], 201);
+}
 
     /**
      * Menghapus karyawan beserta data absensinya.

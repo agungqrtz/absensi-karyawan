@@ -121,20 +121,58 @@
         </div>
 
         {{-- TAB CONTENT: KELOLA KARYAWAN --}}
-        <div id="employeesTab" class="tab-content hidden">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="md:col-span-1">
-                    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg">
-                        <h3 class="text-xl font-semibold text-white mb-4">Tambah Karyawan Baru</h3>
-                        <form id="addEmployeeForm" onsubmit="event.preventDefault(); addEmployee();" class="space-y-4">
-                            <div>
-                                <label for="employee-name" class="block mb-2 text-sm font-medium text-gray-300">Nama Karyawan</label>
-                                <input type="text" id="employee-name" class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5" placeholder="Contoh: Agung Setiawan" required>
-                            </div>
-                            <button type="submit" class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Tambah Karyawan</button>
-                        </form>
-                    </div>
+       {{-- TAB CONTENT: KELOLA KARYAWAN --}}
+<div id="employeesTab" class="tab-content hidden">
+    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold text-white">Daftar Karyawan</h3>
+            <button onclick="openEmployeeModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md transition">
+                ➕ Tambah Karyawan
+            </button>
+        </div>
+        <div id="employeeListContainer" class="overflow-x-auto">
+            {{-- Tabel daftar karyawan akan ditampilkan di sini oleh JavaScript --}}
+        </div>
+    </div>
+</div>
+
+{{-- MODAL UNTUK TAMBAH/EDIT KARYAWAN --}}
+<div id="employee-modal" class="fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-60 hidden">
+    <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg mx-4">
+        <h3 id="employee-modal-title" class="text-xl font-semibold text-white mb-4">Tambah Karyawan Baru</h3>
+        <form id="employeeForm" onsubmit="event.preventDefault(); addEmployee();" class="space-y-4">
+            <div>
+                <label for="modal-employee-name" class="block mb-2 text-sm font-medium text-gray-300">Nama Karyawan</label>
+                <input type="text" id="modal-employee-name" class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-indigo-500 block w-full p-2.5" required>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="modal-employee-age" class="block mb-2 text-sm font-medium text-gray-300">Umur</label>
+                    <input type="number" id="modal-employee-age" class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-indigo-500 block w-full p-2.5" required>
                 </div>
+                <div>
+                    <label for="modal-employee-gender" class="block mb-2 text-sm font-medium text-gray-300">Jenis Kelamin</label>
+                    <select id="modal-employee-gender" class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-indigo-500 block w-full p-2.5" required>
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label for="modal-employee-position" class="block mb-2 text-sm font-medium text-gray-300">Jabatan</label>
+                <input type="text" id="modal-employee-position" class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-indigo-500 block w-full p-2.5" required>
+            </div>
+             <div>
+                <label for="modal-employee-join_date" class="block mb-2 text-sm font-medium text-gray-300">Tanggal Bergabung</label>
+                <input type="date" id="modal-employee-join_date" class="bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-indigo-500 block w-full p-2.5" required>
+            </div>
+            <div class="mt-6 flex justify-end gap-4">
+                <button type="button" onclick="closeEmployeeModal()" class="px-6 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-semibold transition">Batal</button>
+                <button type="submit" class="px-6 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
                 <div class="md:col-span-2">
                     <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg">
                         <h3 class="text-xl font-semibold text-white mb-4">Daftar Karyawan</h3>
@@ -631,54 +669,90 @@
         dialog.classList.add('flex');
     }
 
-    function displayEmployeeListTable(employeeList) {
-        const container = document.getElementById('employeeListContainer');
-        if (employeeList.length === 0) {
-            container.innerHTML = '<p class="text-gray-400">Belum ada karyawan yang ditambahkan.</p>';
-            return;
-        }
-        let tableHTML = `
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-300">
-                    <thead class="text-xs text-gray-300 uppercase bg-gray-700">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">Nama Karyawan</th>
-                            <th scope="col" class="px-6 py-3 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+ // Ganti fungsi displayEmployeeListTable yang sudah ada dengan ini
+function displayEmployeeListTable(employeeList) {
+    const container = document.getElementById('employeeListContainer');
+    if (employeeList.length === 0) {
+        container.innerHTML = '<p class="text-gray-400 text-center py-8">Belum ada karyawan yang ditambahkan.</p>';
+        return;
+    }
+    let tableHTML = `
+        <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
+            <table class="w-full text-sm text-left text-gray-400">
+                <thead class="text-xs text-gray-300 uppercase bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Nama</th>
+                        <th scope="col" class="px-6 py-3">Jabatan</th>
+                        <th scope="col" class="px-6 py-3">Jenis Kelamin</th>
+                        <th scope="col" class="px-6 py-3">Umur</th>
+                        <th scope="col" class="px-6 py-3">Tgl Bergabung</th>
+                        <th scope="col" class="px-6 py-3 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    employeeList.forEach(emp => {
+        const joinDate = new Date(emp.join_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        tableHTML += `
+            <tr class="border-b bg-gray-800 border-gray-700 hover:bg-gray-600">
+                <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">${emp.name}</th>
+                <td class="px-6 py-4">${emp.position}</td>
+                <td class="px-6 py-4">${emp.gender}</td>
+                <td class="px-6 py-4">${emp.age} thn</td>
+                <td class="px-6 py-4">${joinDate}</td>
+                <td class="px-6 py-4 text-right">
+                    <button class="font-medium text-red-400 hover:underline" onclick="deleteEmployee(${emp.id}, '${emp.name}')">Hapus</button>
+                </td>
+            </tr>
         `;
-        employeeList.forEach(emp => {
-            tableHTML += `
-                <tr class="border-b border-gray-700 hover:bg-gray-700/50">
-                    <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">${emp.name}</th>
-                    <td class="px-6 py-4 text-right">
-                        <button class="font-medium text-red-400 hover:underline" onclick="deleteEmployee(${emp.id}, '${emp.name}')">Hapus</button>
-                    </td>
-                </tr>
-            `;
-        });
-        tableHTML += `</tbody></table></div>`;
-        container.innerHTML = tableHTML;
+    });
+    tableHTML += `</tbody></table></div>`;
+    container.innerHTML = tableHTML;
+}
+
+    // Ganti fungsi addEmployee() yang sudah ada
+async function addEmployee() {
+    const employeeData = {
+        name: document.getElementById('modal-employee-name').value.trim(),
+        age: document.getElementById('modal-employee-age').value,
+        gender: document.getElementById('modal-employee-gender').value,
+        position: document.getElementById('modal-employee-position').value.trim(),
+        join_date: document.getElementById('modal-employee-join_date').value,
+    };
+
+    if (!employeeData.name || !employeeData.age || !employeeData.position || !employeeData.join_date) {
+        return showMessage('Semua kolom wajib diisi!', 'error');
     }
 
-    async function addEmployee() {
-        const nameInput = document.getElementById('employee-name');
-        const name = nameInput.value.trim();
-        if (!name) {
-            return showMessage('Nama karyawan tidak boleh kosong!', 'error');
-        }
-        try {
-            const response = await axios.post(`${API_URL}/employees`, { name: name });
-            const result = response.data;
-            showMessage(`✅ ${result.message}`, 'success');
-            nameInput.value = '';
-            refreshAllEmployeeData();
-        } catch (error) {
-            const errorMessage = error.response?.data?.errors?.name?.[0] || error.response?.data?.message || 'Gagal menambahkan karyawan.';
+    try {
+        const response = await axios.post(`${API_URL}/employees`, employeeData);
+        showMessage(`✅ ${response.data.message}`, 'success');
+        closeEmployeeModal();
+        refreshAllEmployeeData();
+    } catch (error) {
+        // Menampilkan semua pesan error validasi
+        if (error.response && error.response.status === 422) {
+            const errors = error.response.data.errors;
+            let errorMessages = Object.values(errors).map(e => `<li>${e[0]}</li>`).join('');
+            showMessage(`❌ Gagal menambahkan:<ul>${errorMessages}</ul>`, 'error');
+        } else {
+            const errorMessage = error.response?.data?.message || 'Gagal menambahkan karyawan.';
             showMessage(`❌ Gagal: ${errorMessage}`, 'error');
         }
     }
+}
+
+// Tambahkan fungsi-fungsi baru ini untuk mengontrol modal
+function openEmployeeModal() {
+    document.getElementById('employeeForm').reset();
+    document.getElementById('employee-modal').classList.remove('hidden');
+    document.getElementById('employee-modal').classList.add('flex');
+}
+
+function closeEmployeeModal() {
+    document.getElementById('employee-modal').classList.add('hidden');
+    document.getElementById('employee-modal').classList.remove('flex');
+}
 
     function deleteEmployee(employeeId, employeeName) {
         showConfirmDialog(`Apakah Anda yakin ingin menghapus karyawan "${employeeName}"? Semua data absensinya juga akan terhapus.`, () => {
