@@ -102,8 +102,8 @@ class AttendanceController extends Controller
         }
 
         $existing = Attendance::where('date', $request->tanggal)
-                               ->where('employee_id', $request->employee_id)
-                               ->first();
+                                ->where('employee_id', $request->employee_id)
+                                ->first();
 
         if ($existing) {
             return response()->json(['message' => 'Data absensi untuk karyawan ini pada tanggal tersebut sudah ada.'], 409);
@@ -193,10 +193,10 @@ class AttendanceController extends Controller
    public function storeEmployee(Request $request)
 {
     $validator = Validator::make($request->all(), [
-        'name' => 'required|string|max:255|unique:employees,name',
+        'name' => 'required|string|min:3|max:255|unique:employees,name', // <--- DITAMBAHKAN min:3
         'age' => 'required|integer|min:17',
         'gender' => 'required|in:Laki-laki,Perempuan',
-        'position' => 'required|string|max:100',
+        'position' => 'required|string|min:3|max:255', // <--- DITAMBAHKAN min:3
         'join_date' => 'required|date',
     ]);
 

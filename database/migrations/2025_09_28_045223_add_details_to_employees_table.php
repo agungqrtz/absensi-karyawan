@@ -17,6 +17,16 @@ return new class extends Migration
             $table->string('position')->after('gender')->nullable();
             $table->date('join_date')->after('position')->nullable();
         });
+
+        Schema::create('employees', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->integer('age');
+        $table->enum('gender', ['Laki-laki', 'Perempuan']);
+        $table->string('position');
+        $table->date('join_date');
+        $table->timestamps();
+    });
     }
 
     /**
